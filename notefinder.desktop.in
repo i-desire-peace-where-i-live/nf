@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Notefinder
+StartupWMClass=Notefinder
+Comment=Note-taking application and other personal information manager
+GenericName=Notefinder
+Exec=INSTALLPATH/bin/notefinder
+Icon=INSTALLPATH/share/icons/notefinder.png
+Type=Application
+Categories=Utility;TextEditor;GTK;
