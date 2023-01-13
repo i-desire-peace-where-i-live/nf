@@ -9,28 +9,27 @@
 #include "slice.h"
 
 enum SourceStatus {
-	STATUS_ERR,
-	STATUS_OFFLINE,
-	STATUS_ONLINE,
+  STATUS_ERR,
+  STATUS_OFFLINE,
+  STATUS_ONLINE,
 };
 
 typedef enum {
-	SOURCE_ERR,
-	SOURCE_DIR,
-	SOURCE_MOZILLA,
+  SOURCE_ERR,
+  SOURCE_DIR,
+  SOURCE_MOZILLA,
 } SourceType;
 
 typedef struct {
-	uint64_t uuid;
+  uint64_t uuid;
 
-	SourceType type;
-	char* param;
+  SourceType type;
+  char* param;
 
-	Slice* entries;
+  Slice* entries;
 } Source;
 
 Source* src_new(void);
 void src_free(void*);
 
 #endif
-

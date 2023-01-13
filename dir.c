@@ -5,134 +5,142 @@
 #define _GNU_SOURCE
 #endif
 
+#include <dirent.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
 #include <sys/param.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
+#include "entry.h"
 #include "slice.h"
 #include "source.h"
-#include "entry.h"
 #include "util.h"
-#include "dir.h"
 
-CMP_STRCMPWRAP(compare_entry, Entry, name)
+static int compare_entry(const void* a, const void* b) {
+  const Entry* cmp = *(Entry**)a;
+  const Entry* arr_memb = *(Entry**)b;
 
-static void update_entry_from_file(Entry* entry, char* path, char* localname) {
-	if (!entry->filepath)
-		entry->filepath = strdup_or_die(path);
+  return cmp->uuid - arr_memb->uuid;
+}
 
-	if (!entry->name)
-		entry->name = strdup_or_die(localname);
+static void update_entry_from_file(Entry* entry, char* path, char* localname,
+                                   struct stat* st) {
+  (void)map_lock(entry->props);
 
-	char* content = NULL;
-	FILE* fp = fopen(path, "rb");
-	long sz;
+  entry_set_default(entry, "filepath", strdup_or_die(path), true);
+  entry_set_default(entry, "name", strdup_or_die(localname), true);
 
-	if (!fp) {
-		debugf("fopen() failed for \"%s\"", path);
-		return;
-	}
+  char* old_content;
+  if ((old_content = entry_get(entry, "content"))) free(old_content);
 
-	fseek(fp, 0, SEEK_END);
-	sz = ftell(fp);
-	rewind(fp);
+  bool is_binary = false;
+  entry_set(entry, "content", read_file(path, true, &is_binary), true);
 
-	// FIXME: we need to take care of the old content somehow, but not now...
-//	free(entry->content);
-//	entry->content = NULL;
+  if (is_binary)
+    entry->type = ENTRY_FILE;
+  else
+    entry->type = ENTRY_NOTE;
 
-	content = malloc_or_die(sz + 1);
-
-	fread(content, 1, sz, fp);
-	content[sz] = 0;
-	fclose(fp);
-
-	// To reach NUL terminator we have to read sz + 1 bytes, so this is fine:
-	if (!(memchr(content, 0, sz))) {
-		// FIXME: crash happens when I overwrite this
-		if (!entry->content)
-			entry->content = content;
-	} else {
-		free(content);
-		debugf("%s appears binary", localname);
-	}
+  (void)map_unlock(entry->props);
+  //	memcpy(entry->created_time, localtime(&st->st_ctime),
+  // sizeof(struct tm)); 	memcpy(entry->modified_time,
+  // localtime(&st->st_mtime), sizeof(struct tm));
 }
 
 int sync_dir(char* param, Slice* entries) {
-	debugf("Importing from %s", param);
-	for (int i = 0; i < entries->len; i++) {
-		Entry* entry = entries->data[i];
+  //  debugf("Exporting to %s", param);
+  qsort(entries->data, entries->len, sizeof(char*), compare_entry);
 
-		if (ENTRY_FLAGS_APP_NEW == (entry->flags & ENTRY_FLAGS_APP_NEW)) {
-			char path[PATH_MAX];
+  for (size_t i = 0; i < entries->len; i++) {
+    Entry* entry = entries->data[i];
 
-			strlcpy(path, param, PATH_MAX);
-			strlcat(path, "/", PATH_MAX);
-			strlcat(path, entry->name, PATH_MAX);
+    char* filepath = entry_get(entry, "filepath");
 
-			entry->filepath = strdup_or_die(path);
+    if (ENTRY_FLAGS_APP_DELETED == (entry->flags & ENTRY_FLAGS_APP_DELETED)) {
+      unlink(filepath);
+      slice_remove_by_iter(entries, i--, entry_free);
 
-			entry->flags &= ~(ENTRY_FLAGS_APP_NEW);
+      continue;
+    } else if (ENTRY_FLAGS_APP_NEW == (entry->flags & ENTRY_FLAGS_APP_NEW)) {
+      char path[PATH_MAX];
 
-		} else if (ENTRY_FLAGS_APP_EDITED != (entry->flags & ENTRY_FLAGS_APP_EDITED))
-			continue;
+      strlcpy(path, param, PATH_MAX);
+      strlcat(path, "/", PATH_MAX);
+      strlcat(path, entry_get(entry, "name"), PATH_MAX);
 
-		if (!entry->filepath || !entry->content)
-			continue;
+      entry_set(entry, "filepath", strdup_or_die(path), true);
+      entry->flags &= ~(ENTRY_FLAGS_APP_NEW);
 
-		FILE* fp = fopen(entry->filepath, "w");
-		fputs(entry->content, fp);
-		fclose(fp);
+      // FIXME!!!
+      filepath = entry_get(entry, "filepath");
+    }
+    // skip untouched entries
+    else if (ENTRY_FLAGS_APP_UPDATED !=
+             (entry->flags & ENTRY_FLAGS_APP_UPDATED))
+      continue;
 
-		entry->flags &= ~(ENTRY_FLAGS_APP_EDITED);
-	}
+    char* content = entry_get(entry, "content");
 
-	debugf("Exporting to %s", param);
-	struct dirent* de;
-	DIR* dir;
+    if (!content) continue;
 
-	if (!(dir = opendir(param))) {
-		debugf("\"%s\" doesn't exist!", param);
-		return STATUS_ERR;
-	}
+    FILE* fp = fopen(filepath, "w");
+    fputs(content, fp);
+    fclose(fp);
 
-	while ((de = readdir(dir))) {
-		if (0 == strcmp(de->d_name, ".") || 0 == strcmp(de->d_name, ".."))
-			continue;
+    entry->flags &= ~(ENTRY_FLAGS_APP_UPDATED);
+  }
 
-		char path[PATH_MAX];
+  //  debugf("Importing from %s", param);
+  struct dirent* de;
+  DIR* dir;
 
-		strlcpy(path, param, PATH_MAX);
-		strlcat(path, "/", PATH_MAX);
-		strlcat(path, de->d_name, PATH_MAX);
+  if (!(dir = opendir(param))) {
+    //    debugf("\"%s\" doesn't exist!", param);
+    return STATUS_ERR;
+  }
 
-		debugf("found file named: \"%s\"", path);
+  while ((de = readdir(dir))) {
+    if (0 == strcmp(de->d_name, ".") || 0 == strcmp(de->d_name, "..")) continue;
 
-		struct stat st;
-		if (0 != stat(path, &st) || 0 == S_ISREG(st.st_mode)) {
-			debugf("stat() failed for \"%s\"; most likely it's not a regular file", path);
-			continue;
-		}
+    char path[PATH_MAX];
 
-		MKSEARCHKEY(Entry, name, de->d_name, p)
-		Entry* entry;
+    strlcpy(path, param, PATH_MAX);
+    strlcat(path, "/", PATH_MAX);
+    strlcat(path, de->d_name, PATH_MAX);
 
-		if (!(entry = (bsearch(&p, entries->data, entries->len, sizeof(char*), compare_entry)))) {
-			entry = entry_new();
-			entry->uuid = (uint64_t)st.st_ino;
-			slice_append(entries, entry);
-		} else {
-			debugf("\"%s\" already exists in the cache, updating", path);
-		}
+    //    debugf("found file named: \"%s\"", path);
 
-		update_entry_from_file(entry, path, de->d_name);
-		qsort(entries->data, entries->len, sizeof(char*), compare_entry);
-	}
+    struct stat st;
+    if (0 != stat(path, &st) || 0 == S_ISREG(st.st_mode)) {
+      /*      debugf(
+                "stat() failed for \"%s\"; most likely it's not a "
+                "regular file",
+                path);
+                */
+      continue;
+    }
 
-	closedir(dir);
+    MKSEARCHKEY(Entry, uuid, (uint64_t)st.st_ino, p)
+    Entry* entry;
+    Entry** res;
 
-	return STATUS_ONLINE;
+    if (!(res = (bsearch(&p, entries->data, entries->len, sizeof(char*),
+                         compare_entry)))) {
+      entry = entry_new();
+      entry->uuid = (uint64_t)st.st_ino;
+      slice_append(entries, entry);
+    } else {
+      entry = *res;
+      //      debugf("\"%s\" already exists in the cache, updating", path);
+    }
+
+    update_entry_from_file(entry, path, de->d_name, &st);
+
+    if (!res) qsort(entries->data, entries->len, sizeof(char*), compare_entry);
+  }
+
+  closedir(dir);
+
+  return STATUS_ONLINE;
 }
-

@@ -6,22 +6,22 @@
 
 #include <gtk/gtk.h>
 
-#include "slice.h"
-#include "entry.h"
+#include "../entry.h"
+#include "../slice.h"
 
-typedef struct {
-	const char* current_title;
-	Entry* current_entry;
-	Slice* history;
+G_BEGIN_DECLS
 
-	GtkWidget* header;
-	GtkWidget* entry;
-	GtkWidget* textview;
-	GtkWidget* save_button;
-	GtkWidget* save_and_close_button;
-	GtkWidget* rename_button;
-} EditorState;
+#define NF_TYPE_EDITOR (nf_editor_get_type())
 
+G_DECLARE_FINAL_TYPE(NfEditor, nf_editor, NF, EDITOR, GtkWindow)
+
+NfEditor* editor_new(GtkWindow*);
+void editor_set_entry(NfEditor*, Entry*);
+void editor_set_entry_visible(NfEditor*, gboolean);
+
+G_END_DECLS
+
+#if 0
 void set_editor_state(Entry*);
 gboolean hide_editor_cb(GtkWidget*, gpointer);
 void edited_cb(gpointer, gpointer);
@@ -31,6 +31,5 @@ EditorState* init_editor_state(GtkWidget* header, GtkWidget* entry,
 		GtkWidget* textview, GtkWidget* save_button,
 		GtkWidget* save_and_close_button, GtkWidget* rename_button);
 GtkWidget* make_editor_window(void);
-
 #endif
-
+#endif

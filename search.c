@@ -2,33 +2,35 @@
  * SPDX-License-Identifier:	0BSD */
 
 #ifndef _GNU_SOURCE
-#define _GNU_SOURCE	// for strcasestr()
+#define _GNU_SOURCE  // for strcasestr()
 #endif
 
 #include <string.h>
 
+#include "entry.h"
 #include "slice.h"
 #include "source.h"
-#include "entry.h"
 #include "util.h"
 
-extern VarsStruct* vars;
+extern Slice* sources;
 
 Slice* get_search_results(char* query) {
-	Slice* results;
-	results = slice_new(0);
+  slice_lock(sources);
 
-	for (int i = 0; i < vars->sources->len; i++) {
-		Source* src = vars->sources->data[i];
+  Slice* results;
+  results = slice_new(0);
 
-		for (int j = 0; j < src->entries->len; j++) {
-			Entry* entry = src->entries->data[j];
-			if (!query || strcasestr(entry->name, query)) {
-				slice_append(results, entry);
-			}
-		}
-	}
+  for (size_t i = 0; i < sources->len; i++) {
+    Source* src = sources->data[i];
 
-	return results;
+    for (int j = 0; j < src->entries->len; j++) {
+      Entry* entry = src->entries->data[j];
+      if (!query || strcasestr(entry_get(entry, "name"), query)) {
+        slice_append(results, entry);
+      }
+    }
+  }
+
+  slice_unlock(sources);
+  return results;
 }
-

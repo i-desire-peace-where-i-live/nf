@@ -4,4 +4,3 @@
 #include "slice.h"
 
 Slice* get_search_results(char*);
-
