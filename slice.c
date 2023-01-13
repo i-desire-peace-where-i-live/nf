@@ -1,82 +1,88 @@
 /* Author:			Sergey Simonenko <gforgx@protonmail.com>
  * SPDX-License-Identifier:	0BSD */
 
+#include "slice.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "slice.h"
 #include "util.h"
 
 void* slice_new(size_t cap) {
-	Slice* s;
+  Slice* s;
 
-	s = malloc_or_die(sizeof(Slice));
-	s->cap = cap;
-	s->len = 0;
-	s->data = malloc_or_die(cap * sizeof(char*));
+  s = malloc_or_die(sizeof(Slice));
+  s->cap = cap;
+  s->len = 0;
+  s->data = malloc_or_die(cap * sizeof(char*));
 
-	pthread_mutex_init(&s->lock, NULL);
+  pthread_mutex_init(&s->lock, NULL);
 
-	return s;
+  return s;
 }
 
 void* slice_append(Slice* s, void* elem) {
-	if (s->len == s->cap) {
-		s->data = realloc_or_die(s->data, sizeof(char*) * (s->cap + 1));
-		s->cap++;
-	}
+  if (s->len == s->cap) {
+    s->data = realloc_or_die(s->data, sizeof(char*) * (s->cap + 1));
+    s->cap++;
+  }
 
-	s->data[s->len] = elem;
-	s->len++;
+  s->data[s->len] = elem;
+  s->len++;
 
-	return s;
+  return s;
 }
 
-/* FIXME:
-void* slice_remove(Slice* s, void* elem) {
-	for (int i = 0; i < s->cap; i++) {
-		if (elem != s->data[i])
-			continue;
-	}
-}
-*/
+void slice_remove_by_iter(Slice* s, size_t iter, void(freecb)(void*)) {
+  if (iter >= s->len) panic("out of bounds");
 
-void slice_print(Slice* s, FILE* f, char* (reprcb)(void*)) {
-	fprintf(f, "[");
-	for (int i = 0; i < s->cap; i++) {
-		reprcb(s->data[i]);
-		void* elem = s->data[i];
-		if (!elem) {
-			fprintf(f, "(null)");
-			continue;
-		}
+  if (freecb) freecb(s->data[iter]);
 
-		if (reprcb)
-			printf("\"%s\"", reprcb(elem));
-		else
-			printf("smth at \"%p\"", elem);
+  for (size_t j = iter; j < s->cap; j++) s->data[j] = s->data[j + 1];
 
-		if (i != s->cap - 1)
-			fprintf(f, ", ");
-	}
-	fprintf(f, "]\n");
+  s->data = realloc_or_die(s->data, sizeof(char*) * (s->cap - 1));
+  s->cap--;
+  s->len--;
 }
 
-void slice_free(Slice* s, void (freecb)(void*)) {
-	if (freecb) {
-		for (int i = 0; i < s->len; i++)
-			freecb(s->data[i]);
-	}
+void slice_remove(Slice* s, void* elem, void(freecb)(void*)) {
+  for (size_t i = 0; i < s->cap; i++) {
+    if (elem != s->data[i]) continue;
 
-	free(s->data);
-	free(s);
+    slice_remove_by_iter(s, i, freecb);
+    break;
+  }
 }
 
-int slice_lock(Slice* s) {
-	return pthread_mutex_lock(&s->lock);
+void slice_print(Slice* s, FILE* f, char*(reprcb)(void*)) {
+  fprintf(f, "[");
+  for (size_t i = 0; i < s->cap; i++) {
+    reprcb(s->data[i]);
+    void* elem = s->data[i];
+    if (!elem) {
+      fprintf(f, "(null)");
+      continue;
+    }
+
+    if (reprcb)
+      printf("\"%s\"", reprcb(elem));
+    else
+      printf("smth at \"%p\"", elem);
+
+    if (i != s->cap - 1) fprintf(f, ", ");
+  }
+  fprintf(f, "]\n");
 }
 
-int slice_unlock(Slice* s) {
-	return pthread_mutex_unlock(&s->lock);
+void slice_free(Slice* s, void(freecb)(void*)) {
+  if (freecb) {
+    for (size_t i = 0; i < s->len; i++) freecb(s->data[i]);
+  }
+
+  free(s->data);
+  free(s);
 }
 
+int slice_lock(Slice* s) { return pthread_mutex_lock(&s->lock); }
+
+int slice_unlock(Slice* s) { return pthread_mutex_unlock(&s->lock); }

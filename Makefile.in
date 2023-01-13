@@ -1,15 +1,25 @@
 .DEFAULT_GOAL := all
 NAME := notefinder
 PREFIX := @prefix@
-SOURCES := slice.c source.c entry.c util.c \
-	   dir.c mozilla.c syncer.c \
-	   resource.c editor.c window.c \
-	   cmd.c main.c
+SOURCES := slice.c map.c json.c  entry.c util.c \
+	   providers/dir.c providers/mozilla.c \
+		 client.c server.c \
+	   ipc.c perl.c main.c
 GTK_FLAGS := `pkg-config --cflags --libs gtk+-3.0`
 PERL_FLAGS := `perl -MExtUtils::Embed -e ccopts -e ldopts`
 CC := cc
 
+define install_func
+	install -p -m 755 $(NAME) $(PREFIX)/bin/$(NAME)
+	mkdir -p $(PREFIX)/share/$(NAME)
+	install -p -m 644 images/$(NAME).png $(PREFIX)/share/$(NAME)/$(NAME).png
+	sed "s~INSTALLPATH~$(PREFIX)~g" $(NAME).desktop.in > $(NAME).desktop
+	install -p -m 644 $(NAME).desktop $(PREFIX)/share/applications/$(NAME).desktop
+	rm $(NAME).desktop
+endef
+
 all: resources compile
+	touch .all.done
 
 resources:
 	 glib-compile-resources --generate-source resource.xml
@@ -17,19 +27,24 @@ resources:
 
 compile:
 	$(CC) $(SOURCES) \
+		-O \
 		-lpthread \
 		-lsqlite3 \
+		-lcurl \
+		-lcrypto \
+		-lssl \
 		$(GTK_FLAGS) \
 		$(PERL_FLAGS) \
-		-o $(NAME) -g
+		-o $(NAME) \
+		-fsanitize=address -g
 
+ifeq ($(wildcard .all.done),)
 install: all
-	install -p -m 755 $(NAME) $(PREFIX)/bin/$(NAME)
-	mkdir -p $(PREFIX)/share/$(NAME)
-	install -p -m 644 images/$(NAME).png $(PREFIX)/share/$(NAME)/$(NAME).png
-	sed "s~INSTALLPATH~$(PREFIX)~g" $(NAME).desktop.in > $(NAME).desktop
-	install -p -m 644 $(NAME).desktop $(PREFIX)/share/applications/$(NAME).desktop
-	rm $(NAME).desktop
+	$(call install_func)
+else
+install:
+	$(call install_func)
+endif
 
 uninstall:
 	rm -rf $(PREFIX)/bin/$(NAME)
@@ -37,7 +52,7 @@ uninstall:
 	rm -rf $(PREFIX)/share/$(NAME)
 
 clean:
-	rm -rf $(NAME) resource.c resource.h
+	rm -rf $(NAME) resource.c resource.h .all.done
 
 dist-clean: clean
 	git clean -f
