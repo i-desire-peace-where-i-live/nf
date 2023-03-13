@@ -463,24 +463,24 @@ int keep_backend_loop(ChildData child) {
       CLIENT_KEEP, "https://www.googleapis.com/notes/v1/", auth_token);
 
   while (1) {
-      WriteCBMem* entries_json = writecbmem_new();
-      CURL_alloc_post(client_curl, all_notes_request, entries_json, "changes");
+    WriteCBMem* entries_json = writecbmem_new();
+    CURL_alloc_post(client_curl, all_notes_request, entries_json, "changes");
 
-      Map* m = json_parse_object(&entries_json->data, NULL);
-      Slice* entries_list = map_get(m, "nodes");
+    Map* m = json_parse_object(&entries_json->data, NULL);
+    Slice* entries_list = map_get(m, "nodes");
 
-      const char* value;
-      for (size_t i = 0; i < entries_list->len; i++) {
-        value = map_get(entries_list->data[i], "title");
+    const char* value;
+    for (size_t i = 0; i < entries_list->len; i++) {
+      value = map_get(entries_list->data[i], "title");
 
-        if (value) ipc_entry_data_send(child.fd0[1], 0, "title", value);
+      if (value) ipc_entry_data_send(child.fd0[1], 0, "title", value);
 
-        value = map_get(entries_list->data[i], "text");
+      value = map_get(entries_list->data[i], "text");
 
-        if (value) ipc_entry_data_send(child.fd0[1], 0, "text", value);
-      }
+      if (value) ipc_entry_data_send(child.fd0[1], 0, "text", value);
+    }
 
-      sleep(30);
+    sleep(30);
   }
 
 out:

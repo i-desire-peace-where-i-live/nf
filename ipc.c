@@ -1,12 +1,12 @@
 /* Author:			Sergey Simonenko <gforgx@protonmail.com>
  * SPDX-License-Identifier:	0BSD */
 
-#include <stdio.h>
+#include "ipc.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "ipc.h"
 #include "util.h"
 
 int ipc_entry_data_send(int fd, uint64_t uuid, const char* key, char* value) {
@@ -18,9 +18,7 @@ int ipc_entry_data_send(int fd, uint64_t uuid, const char* key, char* value) {
   msg->value_sz = value_sz;
   strlcpy((char*)&msg->value, value, value_sz);
 
-  printf("write() resulted in %d bytes\n",
-      write(fd, msg, total_sz));
+  printf("write() resulted in %d bytes\n", write(fd, msg, total_sz));
 
   return 0;
 }
-

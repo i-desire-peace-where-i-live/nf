@@ -54,7 +54,7 @@ GtkWidget* listbox_new(void) {
   new->image = gtk_image_new();
   gtk_image_set_from_icon_name(GTK_IMAGE(new->image), ENTRY_ICON_NOTE,
                                GTK_ICON_SIZE_BUTTON);
- 
+
   return GTK_WIDGET(new);
 }
 
@@ -76,10 +76,11 @@ GtkWidget* listboxrow_new(NfListBox* listbox) {
   new->name_label = gtk_label_new(NULL);
   new->content_label = gtk_label_new(NULL);
   new->date_label = gtk_label_new("Feb 3 2023 18:40");
-  new->icon_widget = listbox->image; //gtk_image_new();
+  new->icon_widget = listbox->image;  // gtk_image_new();
 
-//  gtk_box_pack_start(GTK_BOX(new->hbox_above), new->icon_widget, FALSE, FALSE,
-//                     0);
+  //  gtk_box_pack_start(GTK_BOX(new->hbox_above), new->icon_widget, FALSE,
+  //  FALSE,
+  //                     0);
   gtk_box_pack_start(GTK_BOX(new->hbox_above), new->name_label, FALSE, FALSE,
                      0);
   gtk_box_pack_end(GTK_BOX(new->hbox_above), new->date_label, FALSE, FALSE, 0);
@@ -108,11 +109,11 @@ void listboxrow_set_entry(NfListBoxRow* row, Entry* entry) {
 
   short_name = get_first_n_chars(entry_get(entry, "name"), 100, "...");
   gtk_label_set_text(GTK_LABEL(row->name_label), short_name);
-/*
-  const char* icon = ENTRY_ICON_UNKNOWN;
-*/
+  /*
+    const char* icon = ENTRY_ICON_UNKNOWN;
+  */
   if (ENTRY_NOTE == entry->type) {
-//    icon = ENTRY_ICON_NOTE;
+    //    icon = ENTRY_ICON_NOTE;
     short_content = get_first_n_chars(entry_get(entry, "content"), 50, "...");
 
     char* p = strchr(short_content, '\n');
@@ -121,15 +122,16 @@ void listboxrow_set_entry(NfListBoxRow* row, Entry* entry) {
       p = strchr(p, '\n');
     }
   } else if (ENTRY_BOOKMARK == entry->type) {
-//    icon = ENTRY_ICON_BOOKMARK;
+    //    icon = ENTRY_ICON_BOOKMARK;
     short_content = get_first_n_chars(entry_get(entry, "url"), 50, "...");
-  } else if (ENTRY_FILE == entry->type) {}
-//    icon = ENTRY_ICON_FILE;
+  } else if (ENTRY_FILE == entry->type) {
+  }
+  //    icon = ENTRY_ICON_FILE;
 
-/*
-  gtk_image_set_from_icon_name(GTK_IMAGE(row->icon_widget), icon,
-                               GTK_ICON_SIZE_BUTTON);
-*/                             
+  /*
+    gtk_image_set_from_icon_name(GTK_IMAGE(row->icon_widget), icon,
+                                 GTK_ICON_SIZE_BUTTON);
+  */
   gtk_label_set_italic(GTK_LABEL(row->content_label), short_content);
 }
 

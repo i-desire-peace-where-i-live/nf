@@ -6,10 +6,10 @@
 #ifdef HAVE_GTK_3
 #include <gtk/gtk.h>
 
-#include "editor.h"
 #include "../entry.h"
 #include "../source.h"
 #include "../util.h"
+#include "editor.h"
 
 #define RENAME_ICON "error-correct-symbolic"
 

@@ -7,13 +7,13 @@
 #include <gtk/gtk.h>
 
 #include "../common.h"
-#include "editor.h"
 #include "../entry.h"
-#include "listbox.h"
 #include "../resource.h"
 #include "../search.h"
 #include "../slice.h"
 #include "../util.h"
+#include "editor.h"
+#include "listbox.h"
 
 #define RES_LOGO "/resources/images/notefinder.png"
 #define ICON_BACK "go-previous-symbolic"

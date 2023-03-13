@@ -9,9 +9,9 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "ipc.h"
 #include "common.h"
 #include "config.h"
+#include "ipc.h"
 #include "slice.h"
 #include "source.h"
 #include "util.h"
