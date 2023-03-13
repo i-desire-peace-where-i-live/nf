@@ -12,6 +12,7 @@
 #include <string.h>
 #include <time.h>
 
+#include "ipc.h"
 #include "common.h"
 #include "json.h"
 #include "util.h"
@@ -438,17 +439,15 @@ static char* build_all_notes_request(void) {
   return request;
 }
 
-int _main(int argc, char** argv) {
+int keep_backend_loop(ChildData child) {
   CURL_alloc* auth_curl;
   CURL_alloc* client_curl;
-
-  if (argc < 3) panic("Not enough args");
 
   auth_curl = CURL_alloc_setup(CLIENT_AUTH, NULL, NULL);
   (void)SSL_library_init();
   debug_yes = 0;
 
-  char* master_token = get_master_token(auth_curl, argv[1], argv[2]);
+  char* master_token = get_master_token(auth_curl, login, password);
 
   if (!master_token) panicf("couldn't get master token");
 
@@ -463,6 +462,8 @@ int _main(int argc, char** argv) {
   client_curl = CURL_alloc_setup(
       CLIENT_KEEP, "https://www.googleapis.com/notes/v1/", auth_token);
 
+  while 1 {
+
   WriteCBMem* entries_json = writecbmem_new();
   CURL_alloc_post(client_curl, all_notes_request, entries_json, "changes");
 
@@ -471,12 +472,19 @@ int _main(int argc, char** argv) {
 
   const char* value;
   for (size_t i = 0; i < entries_list->len; i++) {
-    value = map_get(entries_list->data[i], argv[3]);
+    value = map_get(entries_list->data[i], "title");
 
-    if (value) printf("%s\n", value);
+    if (value)
+      ipc_entry_data_send(child.fd0[1], 0, "title", value);
+
+    value = map_get(entries_list->data[i], "text");
+
+    if (value)
+      ipc_entry_data_send(child.fd0[1], 0, "text", value);
   }
 
-  exit(0);
+  sleep(30)
+  }
 
 out:
 //  free(auth_token);

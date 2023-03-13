@@ -17,20 +17,10 @@
 #include "util.h"
 
 static int child_count = 0;
-
-typedef struct {
-  pid_t pid;
-  int fd0[2];
-  int fd1[2];
-#if 0
-  BackendFunction* func;
-  char* param;
-#endif
-} ChildData;
+static int child_num = -1;
 
 #define MAX_CHILD 1024
 static ChildData children[MAX_CHILD];
-static int child_num = -1;
 
 extern Slice* sources;
 extern int nargs;
