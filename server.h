@@ -4,6 +4,8 @@
 #ifndef NOTEFINDER_SERVER_H
 #define NOTEFINDER_SERVER_H
 
+#include <unistd.h>
+
 typedef struct {
   pid_t pid;
   int fd0[2];
