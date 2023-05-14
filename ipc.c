@@ -128,7 +128,7 @@ static void fork_clients(int forks_left) {
       close(clients[i].fd1[0]);
     }
 
-    while (1) server_event_loop();
+    server_event_loop();
   }
 
   LOG_RETURN;
