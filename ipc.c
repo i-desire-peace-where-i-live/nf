@@ -23,9 +23,15 @@ static int client_count = 0;
 static SharedClientState clients[MAX_CLIENTS];
 #undef MAX_CLIENTS
 
-static void client_loop(SharedClientState c) {
+/* Client process's main entry */
+static void client_init(SharedClientState c) {
   LOG_ENTRY;
+
   pid_t ppid = getppid();
+
+  /* Close unnecessary ends of pipes */
+  close(c.fd0[0]);
+  close(c.fd1[1]);
 
   while (!kill(ppid, 0)) {
     if (c.sync) c.sync(&c);
@@ -33,18 +39,9 @@ static void client_loop(SharedClientState c) {
   }
 
   LOG_RETURN;
-}
-
-void provider_init(SharedClientState p) {
-  LOG_ENTRY;
-
-  close(p.fd0[0]);
-  close(p.fd1[1]);
-
-  client_loop(p);
-  LOG_RETURN;
   exit(EXIT_SUCCESS);
 }
+
 int send_client_data(int fd, uint64_t uuid, const char* key, char* value) {
   LOG_ENTRY;
 
@@ -116,7 +113,7 @@ static void fork_clients(int forks_left) {
       panicf("Failed to create a client process");
 
     else if (IN_CLIENT(pid))
-      provider_init(client);
+      client_init(client);  // this is a client process's main entry
 
     else {
       client.pid = pid;
@@ -137,6 +134,8 @@ static void fork_clients(int forks_left) {
   LOG_RETURN;
 #undef IN_CLIENT
 }
+
+ClientStatus provider_sync_dir(SharedClientState* c);
 
 void* init_server(char* config_path) {
   FILE* config_fp;
@@ -163,6 +162,7 @@ void* init_server(char* config_path) {
   rewind(config_fp);
   while (-1 != getline(&config_entry, &line_width, config_fp)) {
     Map* config;
+    config_entry[strcspn(config_entry, "\n")] = 0;
 
     char* name = strtok(config_entry, ":");
     char* type = strtok(NULL, ":");
@@ -182,7 +182,7 @@ void* init_server(char* config_path) {
     map_put(data, name, map_new(256));
 
     if (0 == strcmp(type, "dir"))
-      client.sync = NULL;  // provider_sync_dir
+      client.sync = provider_sync_dir;
     else if (0 == strcmp(type, "mozilla"))
       client.sync = NULL;  // provider_sync_mozilla;
     else if (0 == strcmp(type, "keep"))
