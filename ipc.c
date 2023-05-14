@@ -39,6 +39,7 @@ static void init_client(SharedClientState c) {
   exit(EXIT_SUCCESS);
 }
 
+// FIXME
 int send_client_data(int fd, uint64_t uuid, const char* key, char* value) {
   LOG_ENTRY;
 
@@ -58,6 +59,7 @@ int send_client_data(int fd, uint64_t uuid, const char* key, char* value) {
   return 0;
 }
 
+// FIXME
 static int process_client_data(int client) {
   LOG_ENTRY;
 
@@ -78,8 +80,6 @@ static int process_client_data(int client) {
            nbytes, msg.uuid, max_value_sz, value);
     count += 1;
   }
-
-  debugf("Exited loop.......................\n");
 
   LOG_RETURN;
   return count;
