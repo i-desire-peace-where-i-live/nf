@@ -7,6 +7,7 @@
 #include <signal.h>  // kill()
 #include <stdlib.h>  // exit(), free()
 #include <string.h>
+#include <unistd.h>  // sleep()
 
 #include "common.h"
 #include "config.h"
@@ -87,8 +88,11 @@ static int process_client_data(int client) {
 void server_event_loop(void) {
   LOG_ENTRY;
 
-  for (int i = 0; i < client_count; i++) {
-    debugf("Got %d entries from client %d", process_client_data(i), i);
+  for (;;) {
+    for (int i = 0; i < client_count; i++) {
+      debugf("Got %d entries from client %d", process_client_data(i), i);
+    }
+    sleep(10);
   }
 
   LOG_RETURN;
