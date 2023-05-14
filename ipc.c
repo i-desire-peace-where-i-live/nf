@@ -4,16 +4,12 @@
 #include "ipc.h"
 
 #include <errno.h>
-#include <pthread.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <signal.h>  // kill()
+#include <stdlib.h>  // exit(), free()
 #include <string.h>
-#include <unistd.h>
 
 #include "common.h"
 #include "config.h"
-#include "ipc.h"
 #include "map.h"
 #include "util.h"
 
@@ -71,7 +67,7 @@ static int process_client_data(int client) {
   size_t max_value_sz = 0;
 
   while (-1 != (nbytes = read(provider.fd0[0], &msg, sizeof(IPCEntryData)))) {
-    printf("Got: %zu bytes\n", nbytes);
+    debugf("Got: %zu bytes", nbytes);
     char value[msg.value_sz];
 
     if (msg.value_sz > max_value_sz) max_value_sz = msg.value_sz;
@@ -92,7 +88,7 @@ void server_event_loop(void) {
   LOG_ENTRY;
 
   for (int i = 0; i < client_count; i++) {
-    printf("Got %d entries from client %d\n", process_client_data(i), i);
+    debugf("Got %d entries from client %d", process_client_data(i), i);
   }
 
   LOG_RETURN;
