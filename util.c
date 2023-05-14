@@ -190,7 +190,7 @@ char* read_file(char* path, bool skip_binary, bool* is_binary) {
 
 /* Last variadic argument must be sentinel NULL-value */
 char* join_path(char* part, ...) {
-#define ENDSWITH(str, suffixc) (suffixc != str[strlen(str) - 1])
+#define ENDSWITH(str, suffixc) (suffixc == str[strlen(str) - 1])
   va_list argp;
 
   if (!part) return NULL;
