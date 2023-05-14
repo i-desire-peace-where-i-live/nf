@@ -9,29 +9,28 @@
 #include "../common.h"
 #include "../entry.h"
 #include "../ipc.h"
-#include "../provider.h"
 #include "../util.h"
 
-ProviderStatus provider_delete_dir(SharedClientState* p, Entry* e) { return 0; }
+ClientStatus provider_delete_dir(SharedClientState* p, Entry* e) { return 0; }
 
-ProviderStatus provider_put_dir(SharedClientState* p, Entry* e) {
+ClientStatus provider_put_dir(SharedClientState* p, Entry* e) {
   LOG_ENTRY;
 
   LOG_RETURN;
-  return PROVIDER_STATUS_OK;
+  return CLIENT_STATUS_OK;
 }
 
-ProviderStatus provider_sync_dir(SharedClientState* p) {
+ClientStatus provider_sync_dir(SharedClientState* p) {
   LOG_ENTRY;
 
-  ProviderStatus ret = PROVIDER_STATUS_OK;
+  ClientStatus ret = CLIENT_STATUS_OK;
   char* dir_path = map_get(p->config, "param");
   DIR* dir;
   struct dirent* de;
 
   if (!(dir = opendir(dir_path))) {
     debugf("\"%s\" doesn't exist!", dir_path);
-    ret = PROVIDER_STATUS_ERR;
+    ret = CLIENT_STATUS_ERR;
     goto out;
   }
 

@@ -5,6 +5,7 @@
 
 #include <errno.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,7 +15,6 @@
 #include "config.h"
 #include "ipc.h"
 #include "map.h"
-#include "provider.h"
 #include "util.h"
 
 static Map* data;
@@ -23,6 +23,28 @@ static int client_count = 0;
 static SharedClientState clients[MAX_CLIENTS];
 #undef MAX_CLIENTS
 
+static void client_loop(SharedClientState c) {
+  LOG_ENTRY;
+  pid_t ppid = getppid();
+
+  while (!kill(ppid, 0)) {
+    if (c.sync) c.sync(&c);
+    sleep(30);
+  }
+
+  LOG_RETURN;
+}
+
+void provider_init(SharedClientState p) {
+  LOG_ENTRY;
+
+  close(p.fd0[0]);
+  close(p.fd1[1]);
+
+  client_loop(p);
+  LOG_RETURN;
+  exit(EXIT_SUCCESS);
+}
 int send_client_data(int fd, uint64_t uuid, const char* key, char* value) {
   LOG_ENTRY;
 
@@ -120,6 +142,7 @@ void* init_server(char* config_path) {
   FILE* config_fp;
   char* config_entry = NULL;
   size_t line_width;
+  int num = 0;
 
   LOG_ENTRY;
 
@@ -159,7 +182,7 @@ void* init_server(char* config_path) {
     map_put(data, name, map_new(256));
 
     if (0 == strcmp(type, "dir"))
-      client.sync = provider_sync_dir;
+      client.sync = NULL;  // provider_sync_dir
     else if (0 == strcmp(type, "mozilla"))
       client.sync = NULL;  // provider_sync_mozilla;
     else if (0 == strcmp(type, "keep"))
@@ -179,68 +202,4 @@ out:
 
   LOG_RETURN;
   return 0;
-}
-/* Author:			Sergey Simonenko <gforgx@protonmail.com>
- * SPDX-License-Identifier:	0BSD */
-
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-
-#include "common.h"
-#include "ipc.h"
-#include "util.h"
-
-int send_client_data(int fd, uint64_t uuid, const char* key, char* value) {
-  LOG_ENTRY;
-
-  size_t value_sz = strlen(value) + 1;
-  size_t total_sz = sizeof(IPCEntryData) + value_sz;
-  IPCEntryData* msg = malloc_or_die(total_sz);
-
-  msg->uuid = uuid;
-  strlcpy(msg->key, key, MAX_KEY_LEN);
-  msg->value_sz = value_sz;
-  strlcpy(msg->key, key, MAX_KEY_LEN);
-  strlcpy((char*)msg->value, value, value_sz);
-
-  debugf("write() resulted in %zd bytes", write(fd, msg, total_sz));
-
-  LOG_RETURN;
-  return 0;
-}
-/* Author:			Sergey Simonenko <gforgx@protonmail.com>
- * SPDX-License-Identifier:	0BSD */
-
-#include "provider.h"
-
-#include <signal.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
-#include "common.h"
-#include "util.h"
-
-static void provider_loop(SharedClientState p) {
-  LOG_ENTRY;
-  pid_t ppid = getppid();
-
-  while (!kill(ppid, 0)) {
-    if (p.provider_sync) p.provider_sync(&p);
-    sleep(30);
-  }
-
-  LOG_RETURN;
-}
-
-void provider_init(SharedClientState p) {
-  LOG_ENTRY;
-
-  close(p.fd0[0]);
-  close(p.fd1[1]);
-
-  provider_loop(p);
-  LOG_RETURN;
-  exit(EXIT_SUCCESS);
 }
