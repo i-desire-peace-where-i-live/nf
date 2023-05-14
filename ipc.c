@@ -21,7 +21,7 @@ static SharedClientState clients[MAX_CLIENTS];
 #undef MAX_CLIENTS
 
 /* Client process's main entry */
-static void client_init(SharedClientState c) {
+static void init_client(SharedClientState c) {
   LOG_ENTRY;
 
   pid_t ppid = getppid();
@@ -113,7 +113,7 @@ static void fork_clients(int forks_left) {
       panicf("Failed to create a client process");
 
     else if (IN_CLIENT(pid))
-      client_init(client);  // this is a client process's main entry
+      init_client(client);  // this is a client process's main entry
 
     else {
       client.pid = pid;
