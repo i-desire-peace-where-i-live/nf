@@ -8,6 +8,6 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH RE
 
 * Important *
 
-Notefinder source code is licensed under the BSD 0-clause license (0BSD).
+Notefinder's base source code is licensed under the BSD 0-clause license (0BSD).
 It is also available under the General Public License (GPL) version 2 or later.
-Some features (compiled into the binary result only if HAVE_GPL is explicitly specified as a compiler directive during compilation) require GPL. If those parts get used in a source or a binary form the GPL applies to all of Notefinder.
+Some features (compiled into the binary result only if HAVE_GPL is explicitly specified as a compiler directive during compilation) require GPL. If those parts, protected by HAVE_GPL preprocessor directive, get used in either source or a binary form the GPL applies to all of Notefinder.
