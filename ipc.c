@@ -5,7 +5,7 @@
 
 #include <errno.h>
 #include <signal.h>  // kill()
-#include <stdlib.h>  // exit(), free()
+#include <stdlib.h>  // exit()
 #include <string.h>
 #include <unistd.h>  // sleep()
 
@@ -194,7 +194,7 @@ void* init_server(char* config_path) {
   }
 
   fclose(config_fp);
-  free(config_entry);
+  free_and_null(config_entry);
   fork_clients(client_count);
 
 out:

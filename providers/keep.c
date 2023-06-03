@@ -178,8 +178,8 @@ static WriteCBMem* writecbmem_new(void) {
 }
 
 static void writecbmem_free(WriteCBMem* mem) {
-  free(mem->data);
-  free(mem);
+  free_and_null(mem->data);
+  free_and_null(mem);
 }
 
 static size_t curl_write_cb(char* resp, size_t unused, size_t bufsz,
@@ -205,8 +205,8 @@ typedef struct {
 static void CURL_alloc_free(CURL_alloc* curl_alloc) {
   curl_slist_free_all(curl_alloc->headers);
   curl_easy_cleanup(curl_alloc->curl);
-  free(curl_alloc->base_url);
-  free(curl_alloc);
+  free_and_null(curl_alloc->base_url);
+  free_and_null(curl_alloc);
 }
 
 static CURL_alloc* CURL_alloc_setup(ClientType t, const char* base_url,
@@ -348,7 +348,7 @@ static char* get_master_token(CURL_alloc* curl_alloc, char* email,
   unsigned char* mod_bin = bytearr_sub(key, 4, 4 + mod_len);
   unsigned char* exponent_bin =
       bytearr_sub(key, 8 + mod_len, 8 + mod_len + exponent_len);
-  free(key);
+  free_and_null(key);
   BIGNUM* mod = BN_from_bytearr(mod_bin, mod_len);
   BIGNUM* exponent = BN_from_bytearr(exponent_bin, exponent_len);
   RSA* rsa = RSA_from_mod_exponent(mod, exponent);
@@ -382,13 +382,13 @@ static char* get_master_token(CURL_alloc* curl_alloc, char* email,
   char* token = parse_response(resp->data, "Token");
   writecbmem_free(resp);
 out:
-  free(mod_bin);
-  free(exponent_bin);
+  free_and_null(mod_bin);
+  free_and_null(exponent_bin);
   BN_free(mod);
   BN_free(exponent);
-  free(cipher);
-  free(signature);
-  free(body);
+  free_and_null(cipher);
+  free_and_null(signature);
+  free_and_null(body);
 
   return token;
 }
@@ -455,7 +455,7 @@ int keep_backend_loop(ChildData child) {
 
   if (!auth_token) panicf("couldn't get final token");
 
-  free(master_token);
+  free_and_null(master_token);
 
   char* all_notes_request = build_all_notes_request();
 
@@ -484,7 +484,7 @@ int keep_backend_loop(ChildData child) {
   }
 
 out:
-  free(auth_token);
+  free_and_null(auth_token);
   CURL_alloc_free(auth_curl);
   CURL_alloc_free(client_curl);
 openssl_clean:

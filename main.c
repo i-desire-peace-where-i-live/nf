@@ -2,7 +2,7 @@
  * SPDX-License-Identifier:	0BSD */
 
 #include <pthread.h>
-#include <stdlib.h>  // free()
+#include <stdlib.h>  // exit()
 #include <unistd.h>  // sleep()
 
 #include "config.h"
@@ -49,7 +49,7 @@ clean:
 #endif
 
   pthread_join(server_tid, NULL);
-  free(config_path);
+  free_and_null(config_path);
 
   LOG_RETURN;
   exit(EXIT_SUCCESS);

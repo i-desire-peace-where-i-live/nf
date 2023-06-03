@@ -218,7 +218,7 @@ void save_entry_cb(gpointer unused, NfEditor* editor) {
       editor->current_name = newname;
       editor->current_entry->flags |= ENTRY_FLAGS_APP_UPDATED;
 
-      free(oldname);
+      free_and_null(oldname);
     }
 
     if (0 != strcmp(oldtext, current_text)) {
@@ -226,7 +226,7 @@ void save_entry_cb(gpointer unused, NfEditor* editor) {
       entry_set(editor->current_entry, "content", newtext, true);
       editor->current_entry->flags |= ENTRY_FLAGS_APP_UPDATED;
 
-      free(oldtext);
+      free_and_null(oldtext);
     }
   }
 

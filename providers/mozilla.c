@@ -93,7 +93,7 @@ int sync_mozilla(char* param, Slice* entries) {
     return STATUS_ERR;
   }
 
-  free(sql_path);
+  free_and_null(sql_path);
 
   char tmpf[PATH_MAX];
   snprintf(tmpf, PATH_MAX, "%s/.nf-XXXXXXXX", get_home_dir());

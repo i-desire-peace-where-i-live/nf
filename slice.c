@@ -79,8 +79,8 @@ void slice_free(Slice* s, void(freecb)(void*)) {
     for (size_t i = 0; i < s->len; i++) freecb(s->data[i]);
   }
 
-  free(s->data);
-  free(s);
+  free_and_null(s->data);
+  free_and_null(s);
 }
 
 int slice_lock(Slice* s) { return pthread_mutex_lock(&s->lock); }

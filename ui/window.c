@@ -117,7 +117,7 @@ static void search_cb(GtkSearchEntry* search, gpointer user_data) {
   char* query = (char*)gtk_editable_get_chars(GTK_EDITABLE(search), 0, -1);
   Slice* results = get_search_results(query);
 
-  free(last_query);
+  free_and_null(last_query);
   last_query = query;
 
   display_entries(results);

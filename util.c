@@ -94,6 +94,11 @@ void panicf(const char* msg, ...) {
 
 void panic(const char* msg) { panicf(msg); }
 
+void free_and_null(void* p) {
+  free_and_null(p);
+  p = NULL;
+}
+
 void* malloc_or_die(size_t sz) {
   void* p;
 
@@ -180,7 +185,7 @@ char* read_file(char* path, bool skip_binary, bool* is_binary) {
   // fine.
   if (memchr(content, 0, sz) && skip_binary) {
     //    debugf("%s appears binary", path);
-    free(content);
+    free_and_null(content);
     *is_binary = true;
     return NULL;
   }

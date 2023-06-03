@@ -33,8 +33,8 @@ MapData* mapdata_init(const char* k, void* v) {
 // TODO: need something like optional callback for mapdata_free(), map_free()
 
 void mapdata_free(MapData* md) {
-  free(md->K);
-  free(md);
+  free_and_null(md->K);
+  free_and_null(md);
 }
 
 Map* map_new(int cap) {
@@ -73,8 +73,8 @@ void map_free(Map* m) {
     mapdata_free(m->data[i]);
   }
 
-  free(m->data);
-  free(m);
+  free_and_null(m->data);
+  free_and_null(m);
 }
 
 static void map_resize(Map* m, size_t newsz) {}

@@ -3,6 +3,7 @@
 
 #include "entry.h"
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -27,9 +28,9 @@ void entry_free(void* p) {
   map_free(entry->props);
 
   for (int i = 0; i < entry->resources->len; i++)
-    free(entry->resources->data[i]);
+    free_and_null(entry->resources->data[i]);
 
-  free(entry);
+  free_and_null(entry);
 }
 
 void* entry_get(Entry* entry, const char* prop) {
