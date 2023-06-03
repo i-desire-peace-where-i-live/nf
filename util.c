@@ -94,11 +94,6 @@ void panicf(const char* msg, ...) {
 
 void panic(const char* msg) { panicf(msg); }
 
-void free_and_null(void* p) {
-  free_and_null(p);
-  p = NULL;
-}
-
 void* malloc_or_die(size_t sz) {
   void* p;
 

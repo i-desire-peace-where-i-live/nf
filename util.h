@@ -25,7 +25,14 @@
 
 void* malloc_or_die(size_t);
 void* realloc_or_die(void*, size_t);
-void free_and_null(void*);
+
+#define free_and_null(p) \
+  do {                   \
+    if (p) {             \
+      free(p);           \
+      p = NULL;          \
+    }                    \
+  } while (0)
 
 char* strdup_or_die(char*);
 #ifndef __APPLE__
