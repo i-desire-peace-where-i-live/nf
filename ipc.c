@@ -50,7 +50,6 @@ int send_client_data(int fd, uint64_t uuid, const char* key, char* value) {
   msg->uuid = uuid;
   strlcpy(msg->key, key, MAX_KEY_LEN);
   msg->value_sz = value_sz;
-  strlcpy(msg->key, key, MAX_KEY_LEN);
   strlcpy((char*)msg->value, value, value_sz);
 
   debugf("write() resulted in %zd bytes", write(fd, msg, total_sz));
