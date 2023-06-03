@@ -2,7 +2,7 @@
 NAME := notefinder
 PREFIX := @prefix@
 SOURCES := slice.c map.c json.c entry.c util.c \
-	   providers/dir.c providers/mozilla.c \
+	   backends/dir.c backends/mozilla.c \
 	   ipc.c perl.c main.c
 GTK_FLAGS := `pkg-config --cflags --libs gtk+-3.0`
 PERL_FLAGS := `perl -MExtUtils::Embed -e ccopts -e ldopts`

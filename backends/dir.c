@@ -11,16 +11,16 @@
 #include "../ipc.h"
 #include "../util.h"
 
-ClientStatus provider_delete_dir(SharedClientState* p, Entry* e) { return 0; }
+ClientStatus dir_delete(SharedClientState* p, Entry* e) { return 0; }
 
-ClientStatus provider_put_dir(SharedClientState* p, Entry* e) {
+ClientStatus dir_put(SharedClientState* p, Entry* e) {
   LOG_ENTRY;
 
   LOG_RETURN;
   return CLIENT_STATUS_OK;
 }
 
-ClientStatus provider_sync_dir(SharedClientState* p) {
+ClientStatus dir_sync(SharedClientState* p) {
   LOG_ENTRY;
 
   ClientStatus ret = CLIENT_STATUS_OK;

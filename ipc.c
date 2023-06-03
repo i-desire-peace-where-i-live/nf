@@ -60,22 +60,22 @@ int send_client_data(int fd, uint64_t uuid, const char* key, char* value) {
 }
 
 // FIXME
-static int process_client_data(int client) {
+static int process_client_data(int client_num) {
   LOG_ENTRY;
 
   int count = 0;
-  SharedClientState provider = clients[client];
+  SharedClientState client = clients[client_num];
   IPCEntryData msg;
   size_t nbytes;
   size_t max_value_sz = 0;
 
-  while (-1 != (nbytes = read(provider.fd0[0], &msg, sizeof(IPCEntryData)))) {
+  while (-1 != (nbytes = read(client.fd0[0], &msg, sizeof(IPCEntryData)))) {
     debugf("Got: %zu bytes", nbytes);
     char value[msg.value_sz];
 
     if (msg.value_sz > max_value_sz) max_value_sz = msg.value_sz;
 
-    nbytes = read(provider.fd0[0], &value, msg.value_sz);
+    nbytes = read(client.fd0[0], &value, msg.value_sz);
     debugf("Read leftover %zu bytes for %lld, max value sz is: %zu: \"%s\"",
            nbytes, msg.uuid, max_value_sz, value);
     count += 1;
@@ -135,7 +135,7 @@ static void fork_clients(int forks_left) {
 #undef IN_CLIENT
 }
 
-ClientStatus provider_sync_dir(SharedClientState* c);
+ClientStatus dir_sync(SharedClientState* c);
 
 void* init_server(char* config_path) {
   FILE* config_fp;
@@ -182,11 +182,11 @@ void* init_server(char* config_path) {
     map_put(data, name, map_new(256));
 
     if (0 == strcmp(type, "dir"))
-      client.sync = provider_sync_dir;
+      client.sync = dir_sync;
     else if (0 == strcmp(type, "mozilla"))
-      client.sync = NULL;  // provider_sync_mozilla;
+      client.sync = NULL;  // mozilla_sync;
     else if (0 == strcmp(type, "keep"))
-      client.sync = NULL;  // provider_sync_keep;
+      client.sync = NULL;  // keep_sync;
     else
       client.sync = NULL;
 
