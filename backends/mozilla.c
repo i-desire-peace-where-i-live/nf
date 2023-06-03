@@ -57,8 +57,6 @@ static int update_entry_from_select_cb(void* param1, int argc, char** argv,
     return 0;
   }
 
-  MKSEARCHKEY(Entry, uuid, uuid, p)
-
   // FIXME: maybe update properties for already-existent bookmarks?..
   if (!bsearch(&p, entries->data, entries->len, sizeof(char*), compare_entry)) {
     Entry* entry;
