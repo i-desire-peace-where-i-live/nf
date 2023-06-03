@@ -39,7 +39,6 @@ static void init_client(SharedClientState c) {
   exit(EXIT_SUCCESS);
 }
 
-// FIXME
 int send_client_data(int fd, uint64_t uuid, const char* key, char* value) {
   LOG_ENTRY;
 
