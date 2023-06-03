@@ -55,6 +55,8 @@ int send_client_data(int fd, uint64_t uuid, const char* key, char* value) {
 
   debugf("write() resulted in %zd bytes", write(fd, msg, total_sz));
 
+  free_and_null(msg);
+
   LOG_RETURN;
   return 0;
 }
